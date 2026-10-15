@@ -1,0 +1,239 @@
+from pathlib import Path
+
+html = r'''<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BaseLab — Convertor de baze</title>
+<style>
+:root{--bg:#0a1020;--panel:#111a2e;--panel2:#0d1527;--line:#263550;--text:#eef4ff;--muted:#9baac4;--accent:#79a9ff;--accent2:#72e0c0;--warn:#ffce75;--danger:#ff8f9b}
+*{box-sizing:border-box}
+body{margin:0;background:radial-gradient(ellipse at 15% 0%,#18294b 0,transparent 40%),var(--bg);color:var(--text);font:15px/1.55 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+.wrap{width:min(1120px,calc(100% - 32px));margin:0 auto;padding:32px 0 56px}
+header{display:flex;justify-content:space-between;align-items:center;gap:20px;margin-bottom:26px}
+.brand{display:flex;align-items:center;gap:12px}.logo{display:grid;place-items:center;width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,#8bb5ff,#68e3c2);color:#07101d;font-weight:900;font-size:19px;box-shadow:0 8px 28px #68a9ff30}
+.eyebrow{color:var(--accent2);text-transform:uppercase;letter-spacing:.16em;font-size:11px;font-weight:800}
+h1{font-size:clamp(27px,4vw,42px);line-height:1.12;letter-spacing:-.04em;margin:3px 0 8px}
+h2{font-size:19px;margin:0 0 12px;letter-spacing:-.02em}h3{font-size:15px;margin:0 0 8px}
+p{margin:6px 0;color:var(--muted)}.sub{max-width:720px;font-size:16px}
+.pill{border:1px solid var(--line);border-radius:999px;padding:7px 12px;color:var(--muted);font-size:12px;white-space:nowrap}
+.panel{background:linear-gradient(180deg,#131e34,#10182b);border:1px solid var(--line);border-radius:20px;padding:22px;box-shadow:0 16px 50px #00000015}
+.layout{display:grid;grid-template-columns:1.08fr .92fr;gap:18px;margin-top:20px}
+.field-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+label{display:block;font-size:12px;font-weight:750;color:#b9c7df;margin-bottom:7px}
+input,select,button{font:inherit}
+input,select{width:100%;background:#091225;color:var(--text);border:1px solid #31415e;border-radius:11px;padding:12px 13px;outline:none}
+input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px #79a9ff20}
+input[type=number]{appearance:textfield}
+.input-big{font-size:22px;font-weight:700;letter-spacing:.02em}
+.hint{font-size:12px;color:var(--muted);margin-top:6px}
+.actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
+button{cursor:pointer;border:1px solid #344866;background:#1b2942;color:var(--text);padding:10px 15px;border-radius:11px;font-weight:750;transition:.18s}
+button:hover{transform:translateY(-1px);border-color:var(--accent)}
+button.primary{background:linear-gradient(135deg,#8bb5ff,#70e2c4);color:#07101c;border:0}
+button:focus-visible{outline:3px solid #79a9ff88;outline-offset:2px}
+.result{display:flex;flex-direction:column;justify-content:space-between;min-height:250px}
+.result-top{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.result-value{font-size:clamp(25px,4vw,38px);font-weight:850;letter-spacing:.02em;overflow-wrap:anywhere;margin:18px 0;color:#fff}
+.base-tag{display:inline-block;border:1px solid #34506e;background:#0b1528;padding:4px 9px;border-radius:8px;font-size:12px;color:var(--accent2)}
+.error{color:var(--danger);min-height:24px;font-size:13px;margin-top:10px}
+.mini-stats{display:flex;gap:8px;flex-wrap:wrap}.stat{border:1px solid var(--line);background:#0d1629;border-radius:10px;padding:8px 11px;color:var(--muted);font-size:12px}.stat strong{color:var(--text)}
+.full{margin-top:18px}
+.steps-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.steps{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:14px}
+.step-card{background:#0c1426;border:1px solid var(--line);border-radius:15px;padding:16px;min-width:0}
+.step-list{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+.step{display:grid;grid-template-columns:30px minmax(0,1fr);gap:9px;align-items:start;padding:9px;border-radius:10px;background:#111d32;border:1px solid #1e2d47}
+.num{display:grid;place-items:center;width:26px;height:26px;border-radius:8px;background:#263a5b;color:#bcd3ff;font-weight:800;font-size:12px}
+.mathline{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;overflow-wrap:anywhere;font-size:13px;color:#e5edff}
+.small{font-size:12px;color:var(--muted);margin-top:3px}
+.vertical{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre;overflow-x:auto;background:#071020;border:1px solid #263550;border-radius:10px;padding:12px;margin-top:10px;color:#dbe7ff;font-size:13px}
+.callout{border-left:3px solid var(--accent2);background:#0c1c2a;padding:11px 13px;border-radius:0 10px 10px 0;color:#c9d8ed;font-size:13px;margin-top:12px}
+details{margin-top:12px}summary{cursor:pointer;color:var(--accent);font-weight:750}
+.c2-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.c2-result{background:#0b1426;border:1px solid var(--line);border-radius:12px;padding:13px;margin-top:14px;overflow-wrap:anywhere}
+footer{color:#71829e;text-align:center;font-size:12px;margin-top:26px}
+@media(max-width:780px){.layout,.steps{grid-template-columns:1fr}.c2-grid{grid-template-columns:1fr}.wrap{width:min(100% - 20px,680px);padding-top:20px}.panel{padding:16px}header{align-items:flex-start}.pill{display:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header>
+  <div class="brand"><div class="logo">B₂</div><div><div class="eyebrow">Instrument de învățare</div><strong>BaseLab</strong></div></div>
+  <div class="pill">Conversii · pași explicați · C2</div>
+</header>
+<div>
+  <h1>Înțelege fiecare conversie.</h1>
+  <p class="sub">Alege bazele, introdu numărul și vezi rezultatul împreună cu algoritmul: împărțiri succesive, înmulțiri pentru fracții, puteri și verificare.</p>
+</div>
+
+<div class="layout">
+<section class="panel">
+  <h2>Convertor de baze</h2>
+  <div class="field-grid">
+    <div><label for="fromBase">Baza inițială</label><select id="fromBase"></select></div>
+    <div><label for="toBase">Baza rezultatului</label><select id="toBase"></select></div>
+  </div>
+  <div style="margin-top:15px"><label for="numberInput">Numărul de convertit</label><input id="numberInput" class="input-big" value="21,47" autocomplete="off" spellcheck="false"><div class="hint">Poți folosi cifrele 0–9 și literele A–Z. Virgula sau punctul marchează partea fracționară.</div></div>
+  <div class="field-grid" style="margin-top:14px">
+    <div><label for="precision">Cifre după separator</label><select id="precision"><option>4</option><option>8</option><option selected>12</option><option>16</option><option>24</option><option>32</option></select></div>
+    <div><label for="format">Format rezultat</label><select id="format"><option value="comma">Virgulă (RO)</option><option value="dot">Punct</option></select></div>
+  </div>
+  <div class="actions"><button class="primary" id="convertBtn">Calculează conversia</button><button id="swapBtn">⇄ Inversează bazele</button><button id="exampleBtn">Încarcă exemplu</button></div>
+  <div class="error" id="error" role="alert"></div>
+</section>
+
+<section class="panel result">
+  <div>
+    <div class="result-top"><h2>Rezultatul</h2><span class="base-tag" id="baseTag">Baza 2</span></div>
+    <div class="result-value" id="resultValue">10101,011110000101</div>
+    <p id="resultNote">Rezultatul este afișat cu precizia selectată.</p>
+  </div>
+  <div class="mini-stats">
+    <div class="stat">Baza inițială: <strong id="statFrom">10</strong></div>
+    <div class="stat">Baza finală: <strong id="statTo">2</strong></div>
+    <div class="stat">Biți/cifre fracționare: <strong id="statPrecision">12</strong></div>
+  </div>
+</section>
+</div>
+
+<section class="panel full">
+  <div class="steps-head"><div><h2>Procesul complet</h2><p>Pașii se actualizează automat pentru numărul și bazele alese.</p></div><button id="toggleSteps">Ascunde pașii</button></div>
+  <div id="stepsContent" class="steps">
+    <article class="step-card"><h3>1. Partea întreagă</h3><p>Împărțiri succesive la baza rezultatului.</p></article>
+    <article class="step-card"><h3>2. Partea fracționară</h3><p>Înmulțiri succesive cu baza rezultatului.</p></article>
+  </div>
+  <div class="callout" id="explanation">Pentru baza 2, resturile împărțirilor se citesc de jos în sus, iar biții fracționari se citesc de sus în jos.</div>
+</section>
+
+<section class="panel full">
+  <h2>Complement față de 2 (C2)</h2>
+  <p>Calculează reprezentarea C2 pentru un număr întreg semnat. Introdu numărul zecimal și lățimea în biți.</p>
+  <div class="c2-grid" style="margin-top:14px">
+    <div><label for="c2Number">Număr zecimal (întreg)</label><input id="c2Number" type="number" value="-42" step="1"></div>
+    <div><label for="c2Bits">Număr de biți</label><select id="c2Bits"><option>4</option><option>8</option><option selected>8</option><option>16</option><option>32</option><option>64</option></select></div>
+    <div style="display:flex;align-items:end"><button class="primary" id="c2Btn" style="width:100%">Calculează C2</button></div>
+  </div>
+  <div class="c2-result" id="c2Result">Selectează numărul și apasă „Calculează C2”.</div>
+</section>
+
+<footer>BaseLab · Funcționează local în browser, fără instalare și fără conexiune la internet.</footer>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+const DIGITS = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+for(let b=2;b<=36;b++){
+  const a=document.createElement("option");a.value=b;a.textContent=`${b} — ${baseName(b)}`;$("fromBase").appendChild(a);
+  const c=document.createElement("option");c.value=b;c.textContent=`${b} — ${baseName(b)}`;$("toBase").appendChild(c);
+}
+$("fromBase").value="10";$("toBase").value="2";
+function baseName(b){return ({2:"binară",8:"octală",10:"zecimală",16:"hexazecimală"})[b]||"bază "+b}
+function digitChar(n){return DIGITS[n]||"?";}
+function digitVal(ch){return DIGITS.indexOf(ch.toUpperCase())}
+function fmtNum(s){return $("format").value==="comma"?s.replace(".",","):s}
+function parseRational(raw,base){
+  let s=raw.trim().toUpperCase().replace(/,/g,".");
+  if(!s)throw Error("Introdu un număr.");
+  let sign=1n;if(s[0]==="-"){sign=-1n;s=s.slice(1)}else if(s[0]==="+")s=s.slice(1);
+  if(!s||((s.match(/\./g)||[]).length>1))throw Error("Format invalid. Folosește un singur separator fracționar.");
+  const parts=s.split(".");const ip=parts[0]||"0", fp=parts[1]||"";
+  const validPart=(part)=>{for(const ch of part){const v=digitVal(ch);if(v<0||v>=base)throw Error(`Cifra „${ch}” nu este validă în baza ${base}.`)}};
+  validPart(ip);validPart(fp);
+  let intVal=0n;for(const ch of ip)intVal=intVal*BigInt(base)+BigInt(digitVal(ch));
+  let den=BigInt(base)**BigInt(fp.length), frac=0n;for(const ch of fp)frac=frac*BigInt(base)+BigInt(digitVal(ch));
+  return {sign, intVal, frac, den, hasFraction:fp.length>0, original:raw};
+}
+function gcd(a,b){while(b){const t=a%b;a=b;b=t}return a<0n?-a:a}
+function toRational(p){let num=p.intVal*p.den+p.frac;num*=p.sign;let g=gcd(num,p.den);return {num:num/g,den:p.den/g}}
+function integerToBase(n,base){
+  if(n===0n)return {digits:"0",steps:[{n:0n,q:0n,r:0}]};
+  let x=n,arr=[],steps=[];
+  while(x>0n){let q=x/BigInt(base),r=Number(x%BigInt(base));steps.push({n:x,q,r});arr.push(digitChar(r));x=q}
+  return {digits:arr.reverse().join(""),steps};
+}
+function rationalToBase(r,base,precision){
+  const neg=r.num<0n;let num=neg?-r.num:r.num;
+  const whole=num/r.den, rem0=num%r.den;
+  const int=integerToBase(whole,base);
+  let rem=rem0, frac="",steps=[],seen=new Map(),cycle=null;
+  for(let i=0;i<precision&&rem!==0n;i++){
+    if(seen.has(rem.toString())){cycle=seen.get(rem.toString());break}
+    seen.set(rem.toString(),i);
+    const multiplied=rem*BigInt(base), digit=Number(multiplied/r.den);
+    const next=multiplied%r.den;
+    steps.push({index:i+1,rem,multiplied,digit,next,den:r.den});
+    frac+=digitChar(digit);rem=next;
+  }
+  let out=(neg?"-":"")+int.digits+(frac?"."+frac:"");
+  if(rem!==0n)out+="…";
+  return {out,whole,rem0,int,frac,fracSteps:steps,exact:rem===0n,cycle};
+}
+function makeStep(n,body,detail=""){
+  return `<div class="step"><div class="num">${n}</div><div><div class="mathline">${body}</div>${detail?`<div class="small">${detail}</div>`:""}</div></div>`;
+}
+function divisionVertical(st,base){
+  if(!st.length)return "Numărul este 0.";
+  return st.map(s=>`${s.n.toString().padStart(6)} ÷ ${base} = ${s.q.toString().padEnd(6)} rest ${digitChar(s.r)} (${s.r})`).join("\n");
+}
+function runConversion(){
+  $("error").textContent="";
+  try{
+    const fb=Number($("fromBase").value),tb=Number($("toBase").value),prec=Number($("precision").value);
+    const parsed=parseRational($("numberInput").value,fb), rat=toRational(parsed), converted=rationalToBase(rat,tb,prec);
+    const formatted=fmtNum(converted.out);
+    $("resultValue").textContent=formatted;$("baseTag").textContent=`Baza ${tb} · ${baseName(tb)}`;
+    $("resultNote").textContent=converted.exact?"Conversie exactă: partea fracționară s-a terminat.":`Afișare până la ${prec} cifre fracționare; „…” indică faptul că există mai multe cifre.`;
+    $("statFrom").textContent=fb;$("statTo").textContent=tb;$("statPrecision").textContent=prec;
+    const srcInt=parsed.intVal.toString();
+    const integerSteps=converted.int.steps;
+    let integerHtml=`<h3>1. Partea întreagă</h3><p>Împărțim succesiv partea întreagă la baza destinație (${tb}). La fiecare pas notăm câtul și restul.</p>`;
+    if(parsed.sign<0)integerHtml+=`<div class="callout">Numărul este negativ; semnul minus se păstrează separat.</div>`;
+    integerHtml+=`<div class="vertical">${escapeHtml(divisionVertical(integerSteps,tb))}</div>`;
+    integerHtml+=`<div class="step-list">`;
+    integerHtml+=makeStep("↳",`Resturi în ordine: ${integerSteps.map(x=>digitChar(x.r)).join(", ")}`,"Pentru conversia părții întregi, citim resturile de jos în sus.");
+    integerHtml+=makeStep("✓",`Partea întreagă: ${converted.int.digits}`,"Resturile citite invers formează cifrele rezultatului.");
+    integerHtml+=`</div>`;
+    let fracHtml=`<h3>2. Partea fracționară</h3><p>Înmulțim fracția cu baza destinație (${tb}). Partea întreagă a fiecărui produs devine următoarea cifră după separator.</p>`;
+    if(!parsed.hasFraction && parsed.frac===0n){fracHtml+=`<div class="callout">Numărul introdus nu are parte fracționară.</div>`}
+    else if(converted.fracSteps.length===0){fracHtml+=`<div class="callout">Partea fracționară este zero.</div>`}
+    else{
+      fracHtml+=`<div class="step-list">`;
+      converted.fracSteps.forEach((s,i)=>{
+        const remDec=s.rem.toString(), multDec=s.multiplied.toString(), nextDec=s.next.toString();
+        fracHtml+=makeStep(i+1,`${remDec}/${s.den} × ${tb} = ${multDec}/${s.den} → cifra ${digitChar(s.digit)}`,`Partea întreagă: ${s.digit}; restul fracționar pentru pasul următor: ${nextDec}/${s.den}.`);
+      });
+      fracHtml+=`</div><div class="callout">Cifrele se citesc de sus în jos: ${converted.fracSteps.map(s=>digitChar(s.digit)).join("")}${converted.exact?"":"…"}</div>`;
+    }
+    const fullSteps=integerHtml+fracHtml;
+    $("stepsContent").innerHTML=`<article class="step-card">${integerHtml}</article><article class="step-card">${fracHtml}</article>`;
+    const inputFraction=parsed.hasFraction?`${parsed.frac}/${parsed.den}`:"0";
+    $("explanation").innerHTML=`<strong>Ideea algoritmului:</strong> partea întreagă se convertește prin împărțiri succesive și resturi citite invers; partea fracționară prin înmulțiri succesive și cifre citite în ordinea obținerii. <br><br><strong>Valoare exactă interpretată:</strong> ${escapeHtml($("numberInput").value)}<sub>${fb}</sub> = ${rat.num.toString()}/${rat.den.toString()} în formă rațională zecimală.`;
+  }catch(e){$("error").textContent=e.message;$("resultValue").textContent="—";$("stepsContent").innerHTML=`<article class="step-card"><p>Corectează numărul sau baza selectată și încearcă din nou.</p></article>`;$("explanation").textContent="Verifică dacă fiecare cifră există în baza inițială."}
+}
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
+$("convertBtn").addEventListener("click",runConversion);
+$("numberInput").addEventListener("keydown",e=>{if(e.key==="Enter")runConversion()});
+["fromBase","toBase","precision","format"].forEach(id=>$(id).addEventListener("change",runConversion));
+$("swapBtn").addEventListener("click",()=>{const a=$("fromBase").value;$("fromBase").value=$("toBase").value;$("toBase").value=a;runConversion()});
+$("exampleBtn").addEventListener("click",()=>{$("fromBase").value="10";$("toBase").value="2";$("numberInput").value="21,47";$("precision").value="12";runConversion()});
+$("toggleSteps").addEventListener("click",()=>{const c=$("stepsContent"),hide=c.style.display!=="none";c.style.display=hide?"none":"grid";$("toggleSteps").textContent=hide?"Arată pașii":"Ascunde pașii"});
+$("c2Btn").addEventListener("click",()=>{
+  const nstr=$("c2Number").value.trim(),bits=Number($("c2Bits").value),out=$("c2Result");
+  try{
+    if(!/^[+-]?\d+$/.test(nstr))throw Error("Introdu un număr întreg.");
+    const n=BigInt(nstr),min=-(1n<<(BigInt(bits)-1n)),max=(1n<<(BigInt(bits)-1n))-1n;
+    if(n<min||n>max)throw Error(`Numărul nu încape pe ${bits} biți cu semn. Interval permis: ${min}…${max}.`);
+    const mod=1n<<BigInt(bits),unsigned=n<0n?mod+n:n,bin=unsigned.toString(2).padStart(bits,"0");
+    const c1=bin.split("").map(x=>x==="0"?"1":"0").join("");
+    const plus=(BigInt("0b"+c1)+1n)%mod, c2=plus.toString(2).padStart(bits,"0");
+    out.innerHTML=`<strong>${n.toString()} în C2 pe ${bits} biți:</strong><div class="vertical">${escapeHtml(bin)}  ← reprezentarea pe ${bits} biți\nC1: ${escapeHtml(c1)}\nC1 + 1: ${escapeHtml(c2)}</div><p>Intervalul reprezentabil pe ${bits} biți cu semn este ${min} până la ${max}.</p>`;
+  }catch(e){out.textContent=e.message}
+});
+runConversion();
+</script>
+</body>
+</html>'''
+path = Path("/mnt/data/baselab_convertor_baze.html")
+path.write_text(html, encoding="utf-8")
+print(f"Created {path} ({path.stat().st_size} bytes)")
